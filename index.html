@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>워드마스터 수능 2000 심플</title>
+  <meta name="description" content="휴대폰 스크롤 없이 한눈에 외우는 워드마스터 수능 2000 영단어 & 무작위 테스트 (구글 계정 자동로그인 · 개인별 구글시트 10인 연동)" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="워드마스터2000" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- 1. 상단 바 -->
+    <header class="top-bar">
+      <select id="daySelect" class="day-select" aria-label="학습 Day 선택"></select>
+      <div class="top-actions">
+        <button id="shuffleBtn" class="chip-btn" title="단어 순서 무작위 섞기">🔀 랜덤</button>
+        <button id="autoSpeakBtn" class="chip-btn active" title="넘길 때마다 발음 자동 듣기">🔊 자동</button>
+        <button id="autoPlayBtn" class="chip-btn" title="손 안 대고 연속 재생">▶ 연속</button>
+        <button id="accountBtn" class="icon-btn" title="구글 계정 및 내 구글시트 (최대 10인)">
+          👤<span id="syncDot" class="sync-dot"></span>
+        </button>
+        <button id="helpBtn" class="icon-btn" title="사용법 튜토리얼 보기">?</button>
+      </div>
+    </header>
+
+    <!-- 2. 모드 전환 탭 (딱 2개) -->
+    <nav class="mode-tabs">
+      <button id="tabStudy" class="mode-tab active">📖 단어 학습</button>
+      <button id="tabQuiz" class="mode-tab">✍️ 무작위 테스트</button>
+    </nav>
+
+    <!-- 3. 메인 스테이지 (스크롤 Zero) -->
+    <main class="main-stage">
+      <!-- [모드 A] 단어 학습 패널 -->
+      <section id="studyPanel" class="view-panel">
+        <div class="status-bar">
+          <div class="progress-pill">
+            <strong id="cardCounter">1 / 40</strong>
+            <span class="stat-badges">
+              <span id="knownCountBadge" class="badge-o">⭕ 0</span>
+              <span id="unknownCountBadge" class="badge-x">❌ 0</span>
+            </span>
+          </div>
+          <div class="blind-group">
+            <button class="blind-btn active" data-blind="none">전체</button>
+            <button class="blind-btn" data-blind="ko">뜻가림</button>
+            <button class="blind-btn" data-blind="en">단어가림</button>
+          </div>
+        </div>
+
+        <!-- 중앙 대형 카드 -->
+        <div id="wordCard" class="word-card">
+          <div class="card-top-meta">
+            <span id="cardDayLabel">Day 01 · #0001</span>
+            <span id="cardStatusTag" class="word-status-tag">미분류</span>
+          </div>
+
+          <div class="card-center">
+            <div class="en-word-wrap">
+              <div id="enWordText" class="en-word">provide</div>
+              <button id="speakWordBtn" class="speak-btn" type="button">🔊 발음 듣기</button>
+            </div>
+            <div class="divider-line"></div>
+            <div id="koMeaningText" class="ko-meaning">제공하다, 공급하다, 준비하다</div>
+          </div>
+
+          <div class="card-hint">카드 터치: 발음 듣기 &amp; 가림 확인 · 좌우 스와이프: 이전/다음</div>
+        </div>
+
+        <!-- 하단 엄지 4버튼 -->
+        <div class="bottom-controls">
+          <button id="prevBtn" class="ctrl-btn ctrl-nav" type="button">◀ 이전</button>
+          <button id="markUnknownBtn" class="ctrl-btn ctrl-unknown" type="button">❌ 몰라요</button>
+          <button id="markKnownBtn" class="ctrl-btn ctrl-known" type="button">⭕ 알아요</button>
+          <button id="nextBtn" class="ctrl-btn ctrl-nav" type="button">다음 ▶</button>
+        </div>
+      </section>
+
+      <!-- [모드 B] 무작위 테스트 패널 -->
+      <section id="quizPanel" class="view-panel hidden">
+        <div class="status-bar">
+          <div class="progress-pill">
+            <strong id="quizScoreText">정답 0 / 0</strong>
+            <span id="quizStreakBadge" class="badge-o">🔥 0연속</span>
+          </div>
+          <div class="blind-group">
+            <button id="quizScopeCurrent" class="blind-btn active">현재Day</button>
+            <button id="quizScopeAll" class="blind-btn">전체2000</button>
+            <button id="quizScopeUnknown" class="blind-btn">❌몰라요</button>
+            <button id="quizDirBtn" class="blind-btn active" title="문제 방향 전환">영➔한</button>
+          </div>
+        </div>
+
+        <div class="quiz-question-card" id="quizQuestionCard">
+          <div class="card-top-meta">
+            <span id="quizMetaDay">Day 01 · 무작위 출제</span>
+            <button id="quizSpeakBtn" class="speak-btn" type="button" style="padding:4px 12px;font-size:12px;">🔊 발음</button>
+          </div>
+          <div id="quizPromptText" class="quiz-prompt">provide</div>
+        </div>
+
+        <div id="quizOptionsBox" class="quiz-options"></div>
+
+        <div class="quiz-bottom-bar">
+          <button id="quizSkipBtn" class="secondary-btn" style="flex:1.4;" type="button">❓ 모르겠어요 (몰라요 저장 후 다음)</button>
+          <button id="quizResetBtn" class="secondary-btn" style="flex:0.6;" type="button">🔄 초기화</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- [모달 1] 최초 1회 구글 계정 로그인 (1회 로그인 후 영구 자동 로그인) -->
+  <div id="loginModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">🔐 구글 계정 시작 (1회 등록 후 자동로그인)</div>
+      </div>
+      <div class="info-card">
+        <strong>처음 한 번만 구글 계정으로 로그인</strong>하면 다음부터는 앱을 켤 때 <strong>자동 로그인</strong>되며, <strong>최대 10명까지 각자 전용 구글 시트</strong>에 내 암기 단어(⭕/❌)와 진도가 자동 저장됩니다.
+      </div>
+
+      <!-- 공식 Google Identity 로그인 버튼 영역 -->
+      <div id="googleGsiWrap" style="display:flex;justify-content:center;"></div>
+
+      <div style="display:flex;align-items:center;gap:8px;color:var(--text-sub);font-size:12px;">
+        <hr style="flex:1;border:none;border-top:1px solid var(--border);" />
+        <span>또는 구글 이메일 1초 간편 시작 (인앱 브라우저 호환)</span>
+        <hr style="flex:1;border:none;border-top:1px solid var(--border);" />
+      </div>
+
+      <input id="loginNameInput" class="input-field" type="text" placeholder="이름 또는 닉네임 (예: 홍길동)" autocomplete="name" />
+      <input id="loginEmailInput" class="input-field" type="email" placeholder="구글 이메일 주소 (예: myid@gmail.com)" autocomplete="email" />
+      <input id="loginPersonalSheetInput" class="input-field" type="url" placeholder="(선택) 내 개인 구글시트 주소 직접 입력 (비워두면 자동생성)" />
+
+      <button id="loginSubmitBtn" class="primary-btn" type="button">🚀 구글 계정으로 시작하기 (다음부터 자동로그인)</button>
+    </div>
+  </div>
+
+  <!-- [모달 2] 내 계정 & 각자 전용 구글 시트 (최대 10명) 관리 모달 -->
+  <div id="accountModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">👤 내 구글 계정 &amp; 전용 구글시트 (10인 연동)</div>
+        <button id="closeAccountModal" class="close-btn" type="button">✕</button>
+      </div>
+
+      <div class="info-card" id="currentUserCard">
+        <div><strong>현재 자동로그인 계정:</strong> <span id="accUserName">-</span> (<span id="accUserEmail">-</span>)</div>
+        <div style="margin-top:4px;"><strong>전체 2,000단어 진도:</strong> <span id="accTotalStats">⭕ 0개 / ❌ 0개</span></div>
+        <div style="margin-top:4px;"><strong>동기화 상태:</strong> <span id="accSyncStatus" style="color:var(--success);font-weight:700;">실시간 자동 저장 중</span></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button id="openMySheetBtn" class="primary-btn" style="height:42px;font-size:13px;" type="button">📊 내 전용 구글시트 열기</button>
+        <button id="syncNowBtn" class="secondary-btn" style="height:42px;font-size:13px;" type="button">🔄 지금 즉시 동기화</button>
+      </div>
+
+      <!-- 접속자 목록 (최대 10명) -->
+      <div class="info-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <strong>👥 등록된 구글 계정 현황 (<span id="userCountLabel">1 / 10명</span>)</strong>
+          <button id="copyInviteLinkBtn" class="blind-btn active" type="button">🔗 10인 초대링크 복사</button>
+        </div>
+        <div id="userSlotList" class="user-slot-list"></div>
+      </div>
+
+      <!-- 구글 시트 연동 설정 (마스터 Apps Script URL 또는 개인 구글 시트 URL) -->
+      <div class="info-card">
+        <strong>⚙️ 내 구글 계정 시트 연동 설정</strong>
+        <p style="margin:4px 0 8px;font-size:12px;">
+          내 구글 계정에 10명 각자의 전용 시트를 자동 생성하려면 아래 <strong>[구글시트 자동생성 코드 복사]</strong> 후 발급된 웹앱 URL을 붙여넣으세요. (개별 구글 시트 주소를 직접 넣어도 됩니다.)
+        </p>
+        <input id="gasUrlInput" class="input-field" type="url" placeholder="구글 Apps Script 웹앱 URL 또는 내 구글시트 URL" style="margin-bottom:6px;" />
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <button id="saveGasUrlBtn" class="secondary-btn" type="button">💾 시트 연동 주소 저장</button>
+          <button id="copyGasCodeBtn" class="secondary-btn" type="button">📋 구글시트 자동생성 코드 복사</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button id="themeToggleBtn" class="secondary-btn" type="button">🌗 다크/라이트 테마 전환</button>
+        <button id="logoutBtn" class="secondary-btn" style="color:var(--danger);" type="button">🚪 다른 구글계정 변경</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- [모달 3] 단계별 사용법 튜토리얼 모달 -->
+  <div id="tutorialModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">📘 워드마스터 2000 초간단 사용법</div>
+        <button id="closeTutorialModal" class="close-btn" type="button">✕</button>
+      </div>
+
+      <div class="info-card">
+        <strong>1️⃣ 스크롤 없는 한 화면 단어 학습</strong><br/>
+        • 상단에서 <strong>Day 01 ~ Day 50 (총 2,000단어)</strong> 또는 <strong>❌ 몰라요 단어장</strong>을 선택합니다.<br/>
+        • 중앙 카드를 터치하거나 <strong>[🔊 발음 듣기]</strong>를 누르면 원어민 발음이 재생됩니다.<br/>
+        • 하단 <strong>[❌ 몰라요]</strong> / <strong>[⭕ 알아요]</strong> 버튼으로 단어를 분류하며 넘깁니다.
+      </div>
+
+      <div class="info-card">
+        <strong>2️⃣ 🔊 자동 발음 &amp; ▶ 연속 듣기</strong><br/>
+        • 상단 <strong>[🔊 자동]</strong>을 켜두면 다음 단어로 넘길 때마다 자동으로 발음을 읽어줍니다.<br/>
+        • <strong>[▶ 연속]</strong>을 누르면 손을 대지 않아도 2.5초 간격으로 발음을 읽으며 자동 넘김됩니다.
+      </div>
+
+      <div class="info-card">
+        <strong>3️⃣ ✍️ 무작위(랜덤) 스피드 테스트</strong><br/>
+        • <strong>[무작위 테스트]</strong> 탭을 누르면 선택한 범위(현재 Day / 전체 2,000개 / 몰라요 단어)에서 랜덤 4지선다 퀴즈가 출제됩니다.<br/>
+        • 틀린 단어는 자동으로 내 계정의 <strong>❌ 몰라요 단어장</strong>에 저장되어 집중 복습할 수 있습니다.
+      </div>
+
+      <div class="info-card">
+        <strong>4️⃣ 🔐 첫 1회 구글 로그인 ➔ 자동로그인 &amp; 각자 구글시트</strong><br/>
+        • 처음 한 번만 구글 계정으로 로그인하면 다음부터는 <strong>자동 로그인</strong>됩니다.<br/>
+        • 최대 10명까지 각자의 구글 계정에 맞춘 전용 구글 시트 및 클라우드에 내 암기 기록이 실시간 동기화됩니다.
+      </div>
+
+      <button id="startFromTutorialBtn" class="primary-btn" type="button">확인했어요! 바로 시작하기</button>
+    </div>
+  </div>
+
+  <div id="toastMsg" class="toast hidden"></div>
+
+  <script src="./words_data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

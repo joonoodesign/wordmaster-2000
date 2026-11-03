@@ -1,0 +1,18 @@
+{
+  "name": "워드마스터 수능 2000 심플",
+  "short_name": "워드마스터2000",
+  "description": "스크롤 없이 한눈에 외우는 워드마스터 수능 2000 단어장 & 무작위 테스트 (구글 시트 10인 연동)",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
